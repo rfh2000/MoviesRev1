@@ -1,12 +1,14 @@
 package com.richardpendlebury.android.moviesrev1;
 
 import android.content.Context;
+import android.content.Intent;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 
+import com.google.gson.Gson;
 import com.richardpendlebury.android.moviesrev1.model.Movie;
 import com.squareup.picasso.Picasso;
 
@@ -14,6 +16,7 @@ import java.util.List;
 
 public class MovieRecyclerAdapter extends RecyclerView.Adapter<MovieRecyclerAdapter.ViewHolder> {
 
+    private static final String LOG_TAG = "MovieRecyclerAdapter";
     private Context mContext;
     private List<Movie> mMovies;
 
@@ -31,9 +34,22 @@ public class MovieRecyclerAdapter extends RecyclerView.Adapter<MovieRecyclerAdap
     @Override
     public void onBindViewHolder(MovieRecyclerAdapter.ViewHolder holder, int position) {
         final Movie movie = mMovies.get(position);
+        final String movieJson = new Gson().toJson(movie, Movie.class);
         Picasso.with(mContext)
                 .load(buildPosterImageString(movie.getPosterPath()))
                 .into(holder.iv);
+        holder.iv.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                initDetailsActivity(movieJson);
+            }
+        });
+    }
+
+    private void initDetailsActivity(String movieJson) {
+        Intent i = new Intent(mContext, MovieDetailsActivity.class);
+        i.putExtra("MOVIE_JSON", movieJson);
+        mContext.startActivity(i);
     }
 
     @Override

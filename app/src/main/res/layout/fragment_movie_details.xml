@@ -4,8 +4,8 @@
     android:layout_height="match_parent">
 
     <TextView
+        android:id="@+id/fragment_movie_details_tv"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:text="LOADED FRAGMENT"/>
+        android:layout_height="match_parent" />
 
 </LinearLayout>
