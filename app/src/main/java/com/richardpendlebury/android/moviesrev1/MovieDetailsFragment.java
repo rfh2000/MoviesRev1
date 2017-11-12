@@ -7,8 +7,6 @@ import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
-import android.support.v7.widget.DividerItemDecoration;
-import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -16,6 +14,8 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.LinearLayout;
 
+import com.azoft.carousellayoutmanager.CarouselLayoutManager;
+import com.azoft.carousellayoutmanager.CarouselZoomPostLayoutListener;
 import com.google.gson.Gson;
 import com.richardpendlebury.android.moviesrev1.api.ApiClient;
 import com.richardpendlebury.android.moviesrev1.api.ApiInterface;
@@ -74,7 +74,7 @@ public class MovieDetailsFragment extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         // Inflate the fragment layout
-        View rootView = inflater.inflate(R.layout.fragment_movie_details2, container, false);
+        View rootView = inflater.inflate(R.layout.fragment_movie_details, container, false);
 
         // Assign any basic views and initialize state
         mParentLayout = rootView.findViewById(R.id.fragment_movie_details_linear_layout);
@@ -101,9 +101,11 @@ public class MovieDetailsFragment extends Fragment {
     }
 
     private RecyclerView initRecyclerView(RecyclerView recyclerView) {
+        final CarouselLayoutManager layoutManager =
+                new CarouselLayoutManager(CarouselLayoutManager.VERTICAL, false);
+        layoutManager.setPostLayoutListener(new CarouselZoomPostLayoutListener());
+        recyclerView.setLayoutManager(layoutManager);
         recyclerView.setHasFixedSize(true);
-        recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
-        recyclerView.addItemDecoration(new DividerItemDecoration(getContext(), LinearLayoutManager.VERTICAL));
         return recyclerView;
     }
 
