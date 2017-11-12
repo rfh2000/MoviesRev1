@@ -7,12 +7,14 @@ import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
+import android.support.v7.widget.DividerItemDecoration;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.LinearLayout;
-import android.widget.TextView;
 
 import com.google.gson.Gson;
 import com.richardpendlebury.android.moviesrev1.api.ApiClient;
@@ -36,12 +38,16 @@ public class MovieDetailsFragment extends Fragment {
     private static final String LOG_TAG = "MovieDetailsFragment";
     private static final String MOVIE_JSON = "movie_json";
 
-    private String mMovieJson;
+//    private String mMovieJson;
     private Movie mLoadedMovie;
     private int mMovieId;
     private List<Review> mReviews;
     private List<Trailer> mTrailers;
     private LinearLayout mParentLayout;
+    private RecyclerView mRecyclerViewTrailers;
+    private RecyclerView mRecyclerViewReviews;
+    private RecyclerAdapterTrailer mAdapterTrailer;
+    private RecyclerAdapterReview mAdapterReview;
 
     public MovieDetailsFragment() {
     }
@@ -58,8 +64,8 @@ public class MovieDetailsFragment extends Fragment {
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         if (getArguments() != null) {
-            mMovieJson = getArguments().getString(MOVIE_JSON);
-            mLoadedMovie = new Gson().fromJson(mMovieJson, Movie.class);
+            String movieJson = getArguments().getString(MOVIE_JSON);
+            mLoadedMovie = new Gson().fromJson(movieJson, Movie.class);
             mMovieId = mLoadedMovie.getId();
         }
     }
@@ -68,12 +74,15 @@ public class MovieDetailsFragment extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         // Inflate the fragment layout
-        View rootView = inflater.inflate(R.layout.fragment_movie_details, container, false);
+        View rootView = inflater.inflate(R.layout.fragment_movie_details2, container, false);
 
-        // Get any views and initialize state
-        TextView tv = rootView.findViewById(R.id.fragment_movie_details_tv); tv.setText(mMovieJson);
+        // Assign any basic views and initialize state
         mParentLayout = rootView.findViewById(R.id.fragment_movie_details_linear_layout);
         loadBackgroundImage();
+
+        // Assign recycler views
+        mRecyclerViewTrailers = rootView.findViewById(R.id.fragment_movie_details_recycler_view_trailers);
+        mRecyclerViewReviews = rootView.findViewById(R.id.fragment_movie_details_recycler_view_reviews);
 
         // Initialize the api calls to get review and trailer data
         initReviewListApiCall();
@@ -82,13 +91,29 @@ public class MovieDetailsFragment extends Fragment {
         return rootView;
     }
 
+    @Override
+    public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
+        super.onViewCreated(view, savedInstanceState);
+
+        // Initialize state of recycler views
+        mRecyclerViewTrailers = initRecyclerView(mRecyclerViewTrailers);
+        mRecyclerViewReviews = initRecyclerView(mRecyclerViewReviews);
+    }
+
+    private RecyclerView initRecyclerView(RecyclerView recyclerView) {
+        recyclerView.setHasFixedSize(true);
+        recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
+        recyclerView.addItemDecoration(new DividerItemDecoration(getContext(), LinearLayoutManager.VERTICAL));
+        return recyclerView;
+    }
+
     private void loadBackgroundImage() {
         Picasso.with(getContext()).load(
                 buildPosterImageString(mLoadedMovie.getPosterPath()))
                 .into(new Target() {
             @Override
             public void onBitmapLoaded(Bitmap bitmap, Picasso.LoadedFrom from) {
-                mParentLayout.setBackground(new BitmapDrawable(bitmap));
+                mParentLayout.setBackground(new BitmapDrawable(getResources(), bitmap));
             }
             @Override
             public void onBitmapFailed(Drawable errorDrawable) {
@@ -116,6 +141,9 @@ public class MovieDetailsFragment extends Fragment {
             public void onResponse(@NonNull Call<TrailerResponse> call, @NonNull Response<TrailerResponse> response) {
                 //noinspection ConstantConditions
                 mTrailers = response.body().getResults();
+
+                mAdapterTrailer = new RecyclerAdapterTrailer(getContext(), mTrailers);
+                mRecyclerViewTrailers.setAdapter(mAdapterTrailer);
             }
             @Override
             public void onFailure(@NonNull Call<TrailerResponse> call, @NonNull Throwable t) {
@@ -134,6 +162,9 @@ public class MovieDetailsFragment extends Fragment {
             public void onResponse(@NonNull Call<ReviewResponse> call, @NonNull Response<ReviewResponse> response) {
                 //noinspection ConstantConditions
                 mReviews = response.body().getResults();
+
+                mAdapterReview = new RecyclerAdapterReview(getContext(), mReviews);
+                mRecyclerViewReviews.setAdapter(mAdapterReview);
             }
             @Override
             public void onFailure(@NonNull Call<ReviewResponse> call, @NonNull Throwable t) {
