@@ -1,5 +1,8 @@
 package com.richardpendlebury.android.moviesrev1;
 
+import android.graphics.Bitmap;
+import android.graphics.drawable.BitmapDrawable;
+import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -8,6 +11,7 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import com.google.gson.Gson;
@@ -18,6 +22,8 @@ import com.richardpendlebury.android.moviesrev1.model.Review;
 import com.richardpendlebury.android.moviesrev1.model.ReviewResponse;
 import com.richardpendlebury.android.moviesrev1.model.Trailer;
 import com.richardpendlebury.android.moviesrev1.model.TrailerResponse;
+import com.squareup.picasso.Picasso;
+import com.squareup.picasso.Target;
 
 import java.util.List;
 
@@ -35,6 +41,7 @@ public class MovieDetailsFragment extends Fragment {
     private int mMovieId;
     private List<Review> mReviews;
     private List<Trailer> mTrailers;
+    private LinearLayout mParentLayout;
 
     public MovieDetailsFragment() {
     }
@@ -60,12 +67,44 @@ public class MovieDetailsFragment extends Fragment {
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
+        // Inflate the fragment layout
         View rootView = inflater.inflate(R.layout.fragment_movie_details, container, false);
-        TextView tv = rootView.findViewById(R.id.fragment_movie_details_tv);
-        tv.setText(mMovieJson);
+
+        // Get any views and initialize state
+        TextView tv = rootView.findViewById(R.id.fragment_movie_details_tv); tv.setText(mMovieJson);
+        mParentLayout = rootView.findViewById(R.id.fragment_movie_details_linear_layout);
+        loadBackgroundImage();
+
+        // Initialize the api calls to get review and trailer data
         initReviewListApiCall();
         initTrailerListApiCall();
+
         return rootView;
+    }
+
+    private void loadBackgroundImage() {
+        Picasso.with(getContext()).load(
+                buildPosterImageString(mLoadedMovie.getPosterPath()))
+                .into(new Target() {
+            @Override
+            public void onBitmapLoaded(Bitmap bitmap, Picasso.LoadedFrom from) {
+                mParentLayout.setBackground(new BitmapDrawable(bitmap));
+            }
+            @Override
+            public void onBitmapFailed(Drawable errorDrawable) {
+
+            }
+            @Override
+            public void onPrepareLoad(Drawable placeHolderDrawable) {
+
+            }
+        });
+    }
+
+    private String buildPosterImageString(String posterRelativePath){
+        final String BASE_URL = "http://image.tmdb.org/t/p/";
+        final String DEVICE_SIZE = "w185";
+        return BASE_URL + DEVICE_SIZE + posterRelativePath;
     }
 
     private void initTrailerListApiCall() {
